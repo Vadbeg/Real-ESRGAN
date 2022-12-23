@@ -11,17 +11,24 @@ def main(args):
         keyname = 'params'
     else:
         keyname = 'params_ema'
-    model.load_state_dict(torch.load(args.input)[keyname])
+    checkpoint = torch.load(args.input, map_location='cpu')
+    print(checkpoint.keys())
+    model.load_state_dict(checkpoint[keyname])
     # set the train mode to false since we will only run the forward pass.
     model.train(False)
     model.cpu().eval()
 
     # An example input
-    x = torch.rand(1, 3, 64, 64)
+    x = torch.rand(1, 3, 512, 512)
     # Export the model
     with torch.no_grad():
-        torch_out = torch.onnx._export(model, x, args.output, opset_version=11, export_params=True)
-    print(torch_out.shape)
+        torch.onnx.export(
+            model,
+            x,
+            args.output,
+            opset_version=11,
+            export_params=True
+        )
 
 
 if __name__ == '__main__':
